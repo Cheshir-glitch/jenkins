@@ -32,13 +32,21 @@ public class DatabaseController {
     MongoClientSettings connectionSettings = MongoClientSettings.builder().applyConnectionString(connection).build();
     MongoClient mongoDB = MongoClients.create(connectionSettings);
 
-
-    @GetMapping
-    public String getDBs() {
-        Iterator<String> iterator =  mongoDB.listDatabaseNames().iterator();
+    @PutMapping(value = "/{database}/{collection}", consumes = APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseBody
+    public String putObjects(@PathVariable("database") String database, @PathVariable("collection") String collection, HttpEntity<String> httpEntity) {
+        JSONArray array = new JSONArray(Objects.requireNonNull(httpEntity.getBody()));
+        List<Document> documentsList = new ArrayList<>();
+        for (Object object : array) {
+            documentsList.add(Document.parse(object.toString()));
+        }
+        MongoCollection<Document> dbCollection = mongoDB.getDatabase(database).getCollection(collection);
+        dbCollection.insertMany(documentsList);
+        MongoCursor<Document> iterator = dbCollection.find().iterator();
         StringBuilder stringBuilder = new StringBuilder();
         while (iterator.hasNext()) {
-            stringBuilder.append(iterator.next()).append("\n");
+            stringBuilder.append(iterator.next().toJson()).append("\n");
         }
         return stringBuilder.toString();
     }
@@ -49,16 +57,6 @@ public class DatabaseController {
         StringBuilder stringBuilder = new StringBuilder();
         while (iterator.hasNext()) {
             stringBuilder.append(iterator.next()).append("\n");
-        }
-        return stringBuilder.toString();
-    }
-
-    @GetMapping(value = "/{database}/{collection}")
-    public String getDocuments(@PathVariable("database") String database, @PathVariable("collection") String collection) {
-        MongoCursor<Document> iterator = mongoDB.getDatabase(database).getCollection(collection).find().iterator();
-        StringBuilder stringBuilder = new StringBuilder();
-        while (iterator.hasNext()) {
-            stringBuilder.append(iterator.next().toJson()).append("\n");
         }
         return stringBuilder.toString();
     }
@@ -74,19 +72,9 @@ public class DatabaseController {
         return stringBuilder.toString();
     }
 
-
-    @PutMapping(value = "/{database}/{collection}", consumes = APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.CREATED)
-    @ResponseBody
-    public String putObjects(@PathVariable("database") String database, @PathVariable("collection") String collection, HttpEntity<String> httpEntity) {
-        JSONArray array = new JSONArray(Objects.requireNonNull(httpEntity.getBody()));
-        List<Document> documentsList = new ArrayList<>();
-        for (Object object : array) {
-            documentsList.add(Document.parse(object.toString()));
-        }
-        MongoCollection<Document> dbCollection = mongoDB.getDatabase(database).getCollection(collection);
-        dbCollection.insertMany(documentsList);
-        MongoCursor<Document> iterator = dbCollection.find().iterator();
+    @GetMapping(value = "/{database}/{collection}")
+    public String getDocuments(@PathVariable("database") String database, @PathVariable("collection") String collection) {
+        MongoCursor<Document> iterator = mongoDB.getDatabase(database).getCollection(collection).find().iterator();
         StringBuilder stringBuilder = new StringBuilder();
         while (iterator.hasNext()) {
             stringBuilder.append(iterator.next().toJson()).append("\n");
@@ -113,7 +101,6 @@ public class DatabaseController {
         return stringBuilder.toString();
     }
 
-
     @DeleteMapping(value = "/{database}/{collection}", consumes = APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
@@ -127,6 +114,16 @@ public class DatabaseController {
         StringBuilder stringBuilder = new StringBuilder();
         while (iterator.hasNext()) {
             stringBuilder.append(iterator.next().toJson()).append("\n");
+        }
+        return stringBuilder.toString();
+    }
+
+    @GetMapping
+    public String getDBs() {
+        Iterator<String> iterator = mongoDB.listDatabaseNames().iterator();
+        StringBuilder stringBuilder = new StringBuilder();
+        while (iterator.hasNext()) {
+            stringBuilder.append(iterator.next()).append("\n");
         }
         return stringBuilder.toString();
     }
