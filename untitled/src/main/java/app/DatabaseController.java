@@ -87,12 +87,12 @@ public class DatabaseController {
     @ResponseBody
     public String updateObjects(@PathVariable("database") String database,
                                 @PathVariable("collection") String collection,
-                                @RequestParam String filterName,
-                                @RequestParam String filterValue,
-                                @RequestParam String fieldName,
-                                @RequestParam String fieldValue) {
+                                @RequestParam String nameOfFilter,
+                                @RequestParam String valueOfFilter,
+                                @RequestParam String nameOfField,
+                                @RequestParam String valueOfField) {
         MongoCollection<Document> dbCollection = mongoDB.getDatabase(database).getCollection(collection);
-        dbCollection.updateMany(Filters.eq(filterName, filterValue), Updates.set(fieldName, fieldValue));
+        dbCollection.updateMany(Filters.eq(nameOfFilter, valueOfFilter), Updates.set(nameOfField, valueOfField));
         MongoCursor<Document> iterator = dbCollection.find().iterator();
         StringBuilder stringBuilder = new StringBuilder();
         while (iterator.hasNext()) {
@@ -106,10 +106,10 @@ public class DatabaseController {
     @ResponseBody
     public String deleteObjects(@PathVariable("database") String database,
                                 @PathVariable("collection") String collection,
-                                @RequestParam String filterName,
-                                @RequestParam String filterValue) {
+                                @RequestParam String nameOfFilter,
+                                @RequestParam String valueOfFilter) {
         MongoCollection<Document> dbCollection = mongoDB.getDatabase(database).getCollection(collection);
-        dbCollection.deleteMany(Filters.regex(filterName, filterValue));
+        dbCollection.deleteMany(Filters.regex(nameOfFilter, valueOfFilter));
         MongoCursor<Document> iterator = dbCollection.find().iterator();
         StringBuilder stringBuilder = new StringBuilder();
         while (iterator.hasNext()) {
